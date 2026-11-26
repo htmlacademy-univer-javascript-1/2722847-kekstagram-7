@@ -1,4 +1,3 @@
-
 const bigPicture = document.querySelector('.big-picture');
 const bigPictureImg = bigPicture.querySelector('.big-picture__img img');
 const likesCount = bigPicture.querySelector('.likes-count');
@@ -9,6 +8,10 @@ const socialCaption = bigPicture.querySelector('.social__caption');
 const commentCount = bigPicture.querySelector('.social__comment-count');
 const commentsLoader = bigPicture.querySelector('.comments-loader');
 const closeButton = bigPicture.querySelector('.big-picture__cancel');
+
+const COMMENTS_PER_PORTION = 5;
+let shownCommentsCount = 0;
+let currentComments = [];
 
 const createComment = (comment) => {
   const commentElement = document.createElement('li');
@@ -28,6 +31,29 @@ const createComment = (comment) => {
   commentElement.append(commentImg, commentText);
 
   return commentElement;
+};
+
+const renderComments = () => {
+  const commentsFragment = document.createDocumentFragment();
+
+  const nextComments = currentComments.slice(
+    shownCommentsCount,
+    shownCommentsCount + COMMENTS_PER_PORTION
+  );
+
+  nextComments.forEach((comment) => {
+    commentsFragment.append(createComment(comment));
+  });
+
+  socialComments.append(commentsFragment);
+
+  shownCommentsCount += nextComments.length;
+
+  commentCount.innerHTML = `${shownCommentsCount} из <span class="comments-count">${currentComments.length}</span> комментариев`;
+
+  if (shownCommentsCount >= currentComments.length) {
+    commentsLoader.classList.add('hidden');
+  }
 };
 
 const closeBigPicture = () => {
@@ -56,16 +82,13 @@ const openBigPicture = (photo) => {
 
   socialComments.innerHTML = '';
 
-  const commentsFragment = document.createDocumentFragment();
+  currentComments = photo.comments;
+  shownCommentsCount = 0;
 
-  photo.comments.forEach((comment) => {
-    commentsFragment.append(createComment(comment));
-  });
+  commentCount.classList.remove('hidden');
+  commentsLoader.classList.remove('hidden');
 
-  socialComments.append(commentsFragment);
-
-  commentCount.classList.add('hidden');
-  commentsLoader.classList.add('hidden');
+  renderComments();
 
   document.body.classList.add('modal-open');
 
@@ -73,5 +96,7 @@ const openBigPicture = (photo) => {
 };
 
 closeButton.addEventListener('click', closeBigPicture);
+
+commentsLoader.addEventListener('click', renderComments);
 
 export { openBigPicture };
